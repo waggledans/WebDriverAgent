@@ -125,6 +125,13 @@ static UIInterfaceOrientation FBScreenshotOrientation;
     return self.bindingPortRangeFromArguments;
   }
 
+  // default did not want to be read directly using `integerForKey` despite being added to plist as an
+  // integer, but works fine loaded as string then converted
+  NSString *userPrefsPort = [[NSUserDefaults standardUserDefaults] objectForKey:@"Port"];
+  if (userPrefsPort != nil) {
+    return NSMakeRange([userPrefsPort integerValue] , 1);
+  }
+
   // Existence of USE_PORT in the environment implies the port range is managed by the launching process.
   if (NSProcessInfo.processInfo.environment[@"USE_PORT"] &&
       [NSProcessInfo.processInfo.environment[@"USE_PORT"] length] > 0) {
@@ -132,6 +139,29 @@ static UIInterfaceOrientation FBScreenshotOrientation;
   }
 
   return NSMakeRange(DefaultStartingPort, DefaultPortRange);
+}
+
++ (NSString*)bindingServerInterface
+{
+  // 'WebDriverAgent --interface 192.168.0.1' can be passed via the arguments to the process
+  NSString *addressFromArgs = self.bindingInterfaceFromArguments;
+  if (addressFromArgs != nil && addressFromArgs.length > 0) {
+    return addressFromArgs;
+  }
+
+  // Check if  user defaults plist contains "BindInterface"
+  NSString *addressFromUserDefaults = [[NSUserDefaults standardUserDefaults] objectForKey:@"BindInterface"];
+  if (addressFromUserDefaults != nil && addressFromArgs.length > 0) {
+    return addressFromUserDefaults;
+  }
+
+  // Check if the "USE_BIND_INTERFACE" environment variable is set
+  NSString *addressFromEnvironment = NSProcessInfo.processInfo.environment[@"USE_BIND_INTERFACE"];
+  if (addressFromEnvironment != nil && addressFromEnvironment.length > 0) {
+    return addressFromEnvironment;
+  }
+
+  return nil;
 }
 
 + (NSInteger)mjpegServerPort
@@ -593,6 +623,14 @@ static UIInterfaceOrientation FBScreenshotOrientation;
     return NSNotFound;
   }
   return port;
+}
+
++ (NSString*)bindingInterfaceFromArguments
+{
+  NSString *interface = [self valueFromArguments:NSProcessInfo.processInfo.arguments
+                                                 forKey: @"--interface"];
+
+  return interface;
 }
 
 + (NSRange)bindingPortRangeFromArguments

@@ -17,6 +17,7 @@ const defaultAgentPath = path.resolve(BOOTSTRAP_PATH, 'WebDriverAgent.xcodeproj'
 const customBootstrapPath = '/path/to/wda';
 const customAgentPath = '/path/to/some/agent/WebDriverAgent.xcodeproj';
 const customDerivedDataPath = '/path/to/some/agent/DerivedData/';
+const customBindInterface = '10.0.0.1';
 
 describe('Constructor', function () {
   let chai;
@@ -54,6 +55,14 @@ describe('Constructor', function () {
       derivedDataPath: customDerivedDataPath
     }, fakeConstructorArgs));
     agent.xcodebuild.derivedDataPath.should.eql(customDerivedDataPath);
+  });
+  it('should have custom bind address', function () {
+    let agent = new WebDriverAgent({}, _.defaults({
+      wdaBindInterface: customBindInterface,
+    }, fakeConstructorArgs));
+    agent.wdaBindInterface.should.eql(customBindInterface);
+    agent.wdaBaseUrl.should.eql('http://' + customBindInterface);
+    agent.xcodebuild.wdaBindInterface.should.eql(customBindInterface);
   });
 });
 
@@ -152,6 +161,14 @@ describe('get url', function () {
 
     const agent = new WebDriverAgent({}, args);
     agent.url.href.should.eql('https://127.0.0.1:8100/');
+  });
+  it('should use give WDA bind address', function () {
+    const args = Object.assign({}, fakeConstructorArgs);
+    args.wdaBindInterface = customBindInterface;
+    args.wdaLocalPort = '9101';
+
+    const agent = new WebDriverAgent({}, args);
+    agent.url.href.should.eql('http://' + customBindInterface + ':9101/');
   });
 });
 

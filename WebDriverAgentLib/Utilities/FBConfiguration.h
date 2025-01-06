@@ -113,6 +113,11 @@ extern NSString *const FBSnapshotMaxDepthKey;
 + (void)setScreenshotQuality:(NSUInteger)quality;
 
 /**
+ The HTTP Server bind interface
+ */
++ (NSString*)bindingServerInterface;
+
+/**
  The range of ports that the HTTP Server should attempt to bind on launch
  */
 + (NSRange)bindingPortRange;

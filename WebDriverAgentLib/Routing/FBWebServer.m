@@ -92,6 +92,16 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
   [self registerRouteHandlers:[self.class collectCommandHandlerClasses]];
   [self registerServerKeyRouteHandlers];
 
+  // Set the specific interface address if configured
+  NSString *serverHost = @"localhost";
+  NSString *interface = [FBConfiguration bindingServerInterface];
+  if (interface) {
+    [self.server setInterface:interface];
+    serverHost = interface;
+  } else {
+    interface = @"";
+  }
+
   NSRange serverPortRange = FBConfiguration.bindingPortRange;
   NSError *error;
   BOOL serverStarted = NO;
@@ -105,14 +115,14 @@ static NSString *const FBServerURLEndMarker = @"<-ServerURLHere";
       break;
     }
 
-    [FBLogger logFmt:@"Failed to start web server on port %ld with error %@", (long)port, [error description]];
+    [FBLogger logFmt:@"Failed to start web server on %@:%ld with error %@", interface, (long)port, [error description]];
   }
 
   if (!serverStarted) {
     [FBLogger logFmt:@"Last attempt to start web server failed with error %@", [error description]];
     abort();
   }
-  [FBLogger logFmt:@"%@http://%@:%d%@", FBServerURLBeginMarker, [XCUIDevice sharedDevice].fb_wifiIPAddress ?: @"localhost", [self.server port], FBServerURLEndMarker];
+  [FBLogger logFmt:@"%@http://%@:%d%@", FBServerURLBeginMarker, [XCUIDevice sharedDevice].fb_wifiIPAddress ?: serverHost, [self.server port], FBServerURLEndMarker];
 }
 
 - (void)initScreenshotsBroadcaster
